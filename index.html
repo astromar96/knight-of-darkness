@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="A gothic pixel-art action-platformer, playable in the browser.">
+<meta name="theme-color" content="#0d0a16">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Knight of Darkness">
+<meta property="og:description" content="A gothic pixel-art action-platformer, playable in the browser. No install.">
+<meta property="og:url" content="https://astromar96.github.io/knight-of-darkness/">
+<meta property="og:image" content="https://astromar96.github.io/knight-of-darkness/cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+</style>
+<title>Knight of Darkness</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Pirata+One&family=Silkscreen&display=swap">
+<style>
+/* One shrine plate on a lantern-lit vignette; the game's canvas takes the whole screen once it boots. */
+:root {
+	--ink: #0d0a16;
+	--ink-deep: #06040e;
+	--plate: rgba(20, 15, 34, 0.86);
+	--bone: #e9e3d8;
+	--bone-dim: #9a8fa6;
+	--ember: #e0a24a;
+	--ember-deep: #8c4a1e;
+	--haze: #43145a;
+	--display: "Pirata One", "Palatino Linotype", Palatino, serif;
+	--body: "EB Garamond", Palatino, Georgia, serif;
+	--label: "Silkscreen", ui-monospace, "SFMono-Regular", Menlo, monospace;
+	color-scheme: dark;
+}
+
+/* The host's own reset carries this; keep it here so a plain static server renders the same. */
+[hidden] { display: none !important; }
+
+html, body { height: 100%; }
+
+body {
+	margin: 0;
+	background: var(--ink);
+	color: var(--bone);
+	font-family: var(--body);
+	font-size: 17px;
+	line-height: 1.55;
+	-webkit-font-smoothing: antialiased;
+}
+
+#shell {
+	min-height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding-block: 40px;
+	padding-left: max(16px, env(safe-area-inset-left, 0px));
+	padding-right: max(16px, env(safe-area-inset-right, 0px));
+	background:
+		radial-gradient(120% 70% at 50% 8%, rgba(142, 32, 120, 0.30), transparent 62%),
+		radial-gradient(60% 40% at 50% 100%, rgba(224, 162, 74, 0.10), transparent 70%),
+		var(--ink-deep);
+}
+
+.plate {
+	width: 100%;
+	max-width: 540px;
+	border: 1px solid rgba(224, 162, 74, 0.28);
+	border-radius: 3px;
+	background: var(--plate);
+	box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+	padding: 36px 30px 28px;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.eyebrow {
+	font-family: var(--label);
+	font-size: 10px;
+	letter-spacing: 0.22em;
+	color: var(--ember);
+	text-transform: uppercase;
+	margin: 0;
+}
+
+h1 {
+	font-family: var(--display);
+	font-weight: 400;
+	font-size: clamp(42px, 11vw, 62px);
+	line-height: 1.02;
+	letter-spacing: 0.01em;
+	margin: -6px 0 0;
+	text-wrap: balance;
+	color: var(--bone);
+	text-shadow: 0 0 34px rgba(224, 162, 74, 0.22);
+}
+
+.lede { margin: 0; color: var(--bone); }
+.lede em { color: var(--bone-dim); font-style: italic; }
+
+.flame {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--ember);
+	box-shadow: 0 0 10px 2px rgba(224, 162, 74, 0.7);
+	display: inline-block;
+	vertical-align: 1px;
+	margin-right: 8px;
+	animation: flicker 3.1s ease-in-out infinite;
+}
+
+@keyframes flicker {
+	0%, 100% { opacity: 1; }
+	45% { opacity: 0.55; }
+	70% { opacity: 0.9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.flame { animation: none; }
+}
+
+button.enter {
+	font-family: var(--label);
+	font-size: 13px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--ember);
+	background: transparent;
+	border: 1px solid var(--ember);
+	border-radius: 4px;
+	padding: 14px 22px;
+	cursor: pointer;
+	transition: background-color 160ms ease, color 160ms ease;
+}
+
+button.enter:hover { background: rgba(224, 162, 74, 0.12); }
+button.enter:active { background: rgba(224, 162, 74, 0.2); }
+button.enter:focus-visible { outline: 2px solid var(--bone); outline-offset: 3px; }
+
+.keys {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 8px 22px;
+	border-top: 1px solid rgba(224, 162, 74, 0.16);
+	padding-top: 18px;
+	margin: 0;
+}
+
+.keys div { display: flex; align-items: baseline; gap: 9px; min-width: 0; }
+
+kbd {
+	font-family: var(--label);
+	font-size: 10px;
+	color: var(--bone);
+	background: rgba(224, 162, 74, 0.1);
+	border: 1px solid rgba(224, 162, 74, 0.3);
+	border-radius: 3px;
+	padding: 3px 6px;
+	white-space: nowrap;
+}
+
+.keys span { color: var(--bone-dim); font-size: 15px; }
+
+.fine {
+	font-size: 14px;
+	color: var(--bone-dim);
+	margin: 0;
+}
+
+/* Loading */
+#loading { display: flex; flex-direction: column; gap: 10px; }
+
+.bar {
+	height: 6px;
+	border: 1px solid rgba(224, 162, 74, 0.3);
+	border-radius: 3px;
+	overflow: hidden;
+	background: rgba(0, 0, 0, 0.4);
+}
+
+.bar i {
+	display: block;
+	height: 100%;
+	width: 0;
+	background: linear-gradient(90deg, var(--ember-deep), var(--ember));
+	transition: width 200ms linear;
+}
+
+.readout {
+	font-family: var(--label);
+	font-size: 10px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--bone-dim);
+	font-variant-numeric: tabular-nums;
+}
+
+.fail { color: #e3796b; }
+
+/* The game */
+#canvas {
+	position: fixed;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	display: block;
+	border: 0;
+	background: var(--ink);
+	touch-action: none;
+}
+
+#canvas:focus { outline: none; }
+
+#full {
+	position: fixed;
+	top: calc(10px + env(safe-area-inset-top, 0px));
+	right: calc(10px + env(safe-area-inset-right, 0px));
+	font-family: var(--label);
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	color: var(--bone-dim);
+	background: rgba(13, 10, 22, 0.55);
+	border: 1px solid rgba(224, 162, 74, 0.25);
+	border-radius: 3px;
+	padding: 6px 9px;
+	cursor: pointer;
+	opacity: 0.45;
+	transition: opacity 160ms ease;
+}
+
+#full:hover { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="shell">
+	<div class="plate">
+		<p class="eyebrow">Act I &middot; Harrowmere</p>
+		<h1>Knight of Darkness</h1>
+		<p class="lede"><span class="flame"></span>A gothic pixel-art action-platformer. This is the same build that ships to phones, running in your browser &mdash; no install, and your progress saves in this browser.</p>
+
+		<div id="start">
+			<button class="enter" id="play" type="button">Light the lantern</button>
+		</div>
+
+		<div id="loading" hidden>
+			<div class="bar"><i id="fill"></i></div>
+			<div class="readout" id="readout">Waking the crypt&hellip;</div>
+		</div>
+
+		<div class="keys">
+			<div><kbd>&larr; &rarr;</kbd><span>Move</span></div>
+			<div><kbd>Z</kbd><span>Jump</span></div>
+			<div><kbd>X</kbd><span>Attack</span></div>
+			<div><kbd>C</kbd><span>Dash</span></div>
+			<div><kbd>&darr; X</kbd><span>Air thrust</span></div>
+			<div><kbd>V</kbd><span>Ember rite</span></div>
+			<div><kbd>&darr; Z</kbd><span>Drop through</span></div>
+			<div><kbd>Esc</kbd><span>Pause</span></div>
+		</div>
+
+		<p class="fine" id="fine">Touch the screen on a phone or tablet and the on-screen controls appear. The first load fetches <span id="weight">33</span>&nbsp;MB, so it takes a moment; after that the browser keeps it cached.</p>
+	</div>
+</div>
+
+<canvas id="canvas" hidden>Your browser does not support the canvas tag.</canvas>
+<button id="full" type="button" hidden>Fullscreen</button>
+
+<script src="index.js"></script>
+<script>
+const MANIFEST = {
+ "index.wasm": {
+  "type": "application/wasm",
+  "gzip": true,
+  "parts": [
+   {
+    "path": "engine-00.wasm",
+    "bytes": 10054758
+   }
+  ]
+ },
+ "index.pck": {
+  "type": "application/octet-stream",
+  "gzip": false,
+  "parts": [
+   {
+    "path": "pack-00.wasm",
+    "bytes": 11500000
+   },
+   {
+    "path": "pack-01.wasm",
+    "bytes": 11500000
+   },
+   {
+    "path": "pack-02.wasm",
+    "bytes": 347912
+   }
+  ]
+ }
+};
+
+(function () {
+	const shell = document.getElementById('shell');
+	const start = document.getElementById('start');
+	const loading = document.getElementById('loading');
+	const fill = document.getElementById('fill');
+	const readout = document.getElementById('readout');
+	const canvas = document.getElementById('canvas');
+	const full = document.getElementById('full');
+
+	const download = Object.values(MANIFEST).reduce(
+		(sum, file) => sum + file.parts.reduce((n, part) => n + part.bytes, 0), 0);
+	document.getElementById('weight').textContent = (download / 1e6).toFixed(0);
+
+	function say(text, failed) {
+		readout.textContent = text;
+		readout.classList.toggle('fail', failed === true);
+	}
+
+	function stall(message) {
+		loading.hidden = false;
+		fill.parentElement.hidden = true;
+		say(message, true);
+	}
+
+	// Each part comes down with its own progress, so the bar tracks real bytes rather than file count.
+	let loaded = 0;
+
+	async function fetchPart(part) {
+		const response = await fetch(part.path);
+		if (!response.ok) {
+			throw new Error(`${part.path} came back ${response.status}`);
+		}
+		const reader = response.body.getReader();
+		const chunks = [];
+		for (;;) {
+			const step = await reader.read();
+			if (step.done) {
+				break;
+			}
+			chunks.push(step.value);
+			loaded += step.value.length;
+			fill.style.width = `${Math.min(100, (loaded / download) * 100).toFixed(1)}%`;
+			say(`Descending — ${(loaded / 1e6).toFixed(1)} of ${(download / 1e6).toFixed(0)} MB`);
+		}
+		return chunks;
+	}
+
+	async function assemble(file) {
+		const chunks = [];
+		for (const part of file.parts) {
+			chunks.push(...await fetchPart(part));
+		}
+		const blob = new Blob(chunks);
+		if (!file.gzip) {
+			return new Uint8Array(await blob.arrayBuffer());
+		}
+		const stream = blob.stream().pipeThrough(new DecompressionStream('gzip'));
+		return new Uint8Array(await new Response(stream).arrayBuffer());
+	}
+
+	// Godot asks for index.wasm and index.pck by name; both are in memory by then, in pieces that
+	// each stayed under the host's file-size cap, so hand them straight back.
+	function serveFromMemory(held) {
+		const pass = window.fetch.bind(window);
+		window.fetch = function (input, init) {
+			const url = typeof input === 'string' ? input : input.url;
+			const name = url.split('?')[0].split('/').pop();
+			if (Object.prototype.hasOwnProperty.call(held, name)) {
+				const bytes = held[name];
+				return Promise.resolve(new Response(bytes, {
+					status: 200,
+					headers: {
+						'Content-Type': MANIFEST[name].type,
+						'Content-Length': String(bytes.length),
+					},
+				}));
+			}
+			return pass(input, init);
+		};
+	}
+
+	async function boot() {
+		start.hidden = true;
+		loading.hidden = false;
+		say('Descending — 0.0 of ' + (download / 1e6).toFixed(0) + ' MB');
+
+		const held = {};
+		for (const [name, file] of Object.entries(MANIFEST)) {
+			held[name] = await assemble(file);
+		}
+		serveFromMemory(held);
+
+		say('Lighting the lantern…');
+		canvas.hidden = false;
+		const engine = new Engine({
+			canvas: canvas,
+			canvasResizePolicy: 2,
+			executable: 'index',
+			focusCanvas: true,
+			args: [],
+			experimentalVK: false,
+			gdextensionLibs: [],
+			ensureCrossOriginIsolationHeaders: false,
+		});
+		await engine.startGame();
+		shell.remove();
+		full.hidden = false;
+		canvas.focus();
+	}
+
+	const missing = Engine.getMissingFeatures({ threads: false });
+	if (missing.length !== 0) {
+		start.hidden = true;
+		stall(`This browser can't run the game: ${missing.join(', ')}`);
+	} else if (typeof DecompressionStream === 'undefined') {
+		start.hidden = true;
+		stall("This browser can't unpack the build. Try the current Chrome, Safari or Firefox.");
+	} else {
+		document.getElementById('play').addEventListener('click', function () {
+			boot().catch(function (err) {
+				console.error(err);
+				start.hidden = false;
+				canvas.hidden = true;
+				fill.parentElement.hidden = true;
+				say(err && err.message ? err.message : 'The build failed to load. Try again.', true);
+			});
+		});
+	}
+
+	full.addEventListener('click', function () {
+		const request = document.documentElement.requestFullscreen
+			|| document.documentElement.webkitRequestFullscreen;
+		if (!request) {
+			full.hidden = true;
+			return;
+		}
+		Promise.resolve(request.call(document.documentElement))
+			.then(function () { canvas.focus(); })
+			.catch(function () { full.hidden = true; });
+	});
+}());
+</script>
+
+</body>
+</html>
